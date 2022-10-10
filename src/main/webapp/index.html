@@ -1,0 +1,87 @@
+<html>
+<head>
+</head>
+<body style="background-color:azure">
+	<h1 style = "text-align: center;">Eulerity Take-Home Challenge</h1>
+	<h1 style = "text-align: center;">As Solved By Emmett Wall</h1>
+
+	<h2>What I've Added</h2>
+	<ul>
+		<li>crawl() creates instances of MyRunnable and iterates through the concurrent hash map holding the URLs to visit.</li>
+		<li>MyRunnable.java has a run method that calls a getURLs method in ImageFinder. </li>
+		<li>getURLs() uses jsoup to save images and links to go to in the next iteration.</li>
+		<li>There are helper methods like isValidURL, waitForURLs, and giveThread in ImageFinder as well as setParams, createThread, and getState in MyRunnable.</li>
+		<li>I have it set for 8 threads to crawl 5 levels deep from the given URL but these are constants that could be changed.</li>
+		<li>Please be patient! There are pauses in a few places to avoid hammering any website and sites with hundreds of links per page could take up to a few minutes.</li>
+	</ul>
+
+	<h2>How it works</h2>
+	<ul>
+		<li>Pressing the submit button on this page will make a POST
+			request to /main</li>
+		<li>That request will contain a form parameter with the url
+			populated in the input box below</li>
+		<li>The ImageFinder servlet will respond to the request with a
+			list of image urls</li>
+		<li>This page contains javascript to send the request and use the
+			response to build a list of images</li>
+	</ul>
+
+	<div class="content">
+		<div class="input">
+			<form>
+				<input type="text" name="url">
+			</form>
+			<button type="button">Submit!</button>
+		</div>
+		<div class="output">
+			<ul class="results">
+
+			</ul>
+		</div>
+	</div>
+	<script>
+		var resultList = document.querySelector('ul.results');
+		var urlInput = document.querySelector('input[name=url]')
+
+		apiCallBack = function(xhr, callback) {
+			if (xhr.readyState == XMLHttpRequest.DONE) {
+				if (xhr.status != 200) {
+					let message = xhr.status + ":" + xhr.statusText + ":"
+							+ xhr.responseText;
+					alert(message);
+					throw 'API call returned bad code: ' + xhr.status;
+				}
+				let response = xhr.responseText ? JSON.parse(xhr.responseText)
+						: null;
+				if (callback) {
+					callback(response);
+				}
+			}
+		}
+
+		updateList = function(response) {
+			resultList.innerHTML = '';
+			for (var i = 0; i < response.length; i++) {
+				var img = document.createElement("img");
+				img.width = 200;
+				img.src = response[i];
+				resultList.appendChild(img);
+			}
+		}
+
+		makeApiCall = function(url, method, obj, callback) {
+			let xhr = new XMLHttpRequest();
+			xhr.open(method, url);
+			xhr.onreadystatechange = apiCallBack.bind(null, xhr, callback);
+			xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
+		}
+
+		document.querySelector('button').addEventListener("click", function(event) {
+			event.preventDefault();
+			makeApiCall('/main?url=' + urlInput.value, 'POST', null, updateList);
+		});
+	</script>
+</body>
+
+</html>
